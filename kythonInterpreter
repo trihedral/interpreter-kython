@@ -222,14 +222,14 @@ while i < len(script)-1:
         if script[i-1] == "{": lvl+=1  # if line opens a brace, increase indent
         i0 = i
     i+=1
-disp(script, "PYTHON INDENTATION APPLIED\n")
+# disp(script, "PYTHON INDENTATION APPLIED\n")
 
 script = re.sub(r'\s*pass', ' pass', script)
 script = re.sub(r'}\n\s*//FOR', '', script)  # need to remove newline after while  ##############################################
 script = re.sub(r'\s*//FOR', '; ', script)   #   probably need to use match.span(), etc
 script = re.sub(r'}\n\s*//DO', '', script)   #
 script = re.sub(r'\n\s*//DO', '; ', script)  #
-disp(script, "DOs n FORs\n")
+# disp(script, "DOs n FORs\n")
 
 # Restore Remaining Python Symbols
 script = script.replace("{", ":")
@@ -244,7 +244,7 @@ for match in iter:
     i,j = match.span()
     script = insert(script,'{',i,i+1)
     script = insert(script,'}',j-1,j)
-disp(script, "SYMBOLS TRANSLATED\n")
+# disp(script, "SYMBOLS TRANSLATED\n")
 
 # Restore quotes
 script = restorePattern(script, quotePattern, quotes)
