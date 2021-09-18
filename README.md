@@ -1,6 +1,6 @@
-#Kython
+# Kython
 
-
+git clone https://github.com/trihedral/interpreter-kython.git; interpreter-kython/install
 
 A custom python syntax, because semantic whitespace 
 is the worst programming paradigm ever conceived.
