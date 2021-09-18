@@ -1,8 +1,8 @@
 #!/bin/bash
 
 echo "Copying kython to /bin"
-cp kython /bin
-cp kythonInterpreter /bin
+cp interpreter-kython/kython /bin
+cp interpreter-kython/kythonInterpreter /bin
 
 echo "Cloning vim syntax"
 git clone https://github.com/trihedral/vim-syntax-kython
