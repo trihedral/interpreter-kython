@@ -1,12 +1,24 @@
 #!/bin/bash
 
 echo "Copying kython to /bin"
-cp kython* /bin
+cp kython /bin
+cp kythonInterpreter /bin
+
 echo "Cloning vim syntax"
+git clone https://github.com/trihedral/vim-syntax-kython
 
 echo "Installing vim syntax"
+mkdir -p ~/.vim
+cp -r vim-syntax-kython/* ~/.vim/
+mv ~/.vim/LICENSE ~/.vim/LICENSE_KYTHON
+rm -rf vim-syntax-kython
 
 echo "Cloning atom language"
+git clone https://github.com/trihedral/language-kython
 
 echo "Installing atom language"
+mkdir -p ~/.atom/packages/
+cp -r language-kython ~/.atom/packages/
+rm -rf language-kython
 
+echo "Kython install complete. You may now delete the interpreter-kython directory"
