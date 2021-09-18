@@ -1,0 +1,44 @@
+#!/bin/bash
+#=======================================================================
+#
+#   Kython 1.0
+#
+#   Usage:         kython [FLAGS] INFILE
+#
+#   Description:   Runs the input script through the kython
+#                  interpreter and then the system python3 interpreter.
+#   FLAGS:
+#      -2py        Stores interpretted python
+#                  as INFILE.py
+#
+#=======================================================================
+
+argL=($@) # makes arg string into list
+in=$1
+#if [[ ${in:0:2} == ./ ]]; then 
+#   in=${in:2} 
+#fi
+out=$(dirname $in)/.$(basename $in).py
+
+n=$(expr $# - 1) # last arg index
+if [[ $n -ge 0 ]]; then           ## 
+  argF="${argL[$n]}"               # 
+  if [[ $argF == -2py ]]; then     # remove -2py from args
+    argL=( ${argL[@]:0:n} )        # 
+fi; fi                            ##
+
+argL=(${argL[@]:1}) # remove script name from argL
+args=${argL[@]}
+
+kythonInterpreter $in $out      # run kython interpreter on input
+if [[ $? == 0 ]]; then          # if no error from kython
+   python3 $out $args           # run output with python3   
+   if [[ $argF == -2py ]]; then    ##    
+      mv $out $in.py                # if last arg is -2py,
+   else                             # save python script
+      rm $out                       #
+   fi                              ## 
+else 
+   echo "Kython syntax errors.  Exiting"
+fi
+

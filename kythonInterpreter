@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+import sys
+import re
+
+
+inName  = sys.argv[1]
+outName = sys.argv[2]
+keywords = ['False', 'None', 'True', 'and', 'as', 'assert', 'async',    \
+            'await', 'break', 'class', 'continue', 'def', 'del', 'elif',\
+            'else', 'except', 'finally', 'for', 'from', 'global', 'if', \
+            'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or',    \
+            'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']
+
+indenters = ['try', 'while', 'with','else', 'except', 'finally', 'for', \
+             'if', 'elif', 'def', 'async']
+
+def insert(string, addition, i, j):
+    return string[:i] + addition + string[j:]
+
+def disp(script, title):
+    lines = script.split('\n')
+    print(title)
+    for n in range(len(lines)):
+        print(f'{n:3}'+" | "+lines[n])
+    print(">=======================================================<")
+
+def listToRegex(list):
+    regex = ""
+    for i in list:
+        regex += i+'|'
+    return regex[:-1]
+
+def getrc(script, p):
+    r = 1; c = 1;
+    for i in range(0, p):
+        if script[i] == '\n':
+            r += 1; c = 0
+        c += 1
+    return r, c
+
+def rcStr(script, p):
+    r, c = getrc(script, p)
+    return "r:" + str(r) + " c:" + str(c)
+
+def error(script, p, message):
+    print(rcStr(script, i+j+1) + " " + message)
+    exit()
+
+def replacePattern(origScript, pattern, empty):
+    p = re.compile(pattern)
+    iter = p.finditer(origScript)
+    script = ""
+    j0 = 0; j=0
+    for match in iter:
+        i,j = match.span()
+        script += origScript[j0:i] + empty
+        j0 = j
+    script += origScript[j:]
+    return script
+
+def removePattern(origScript, pattern, empty):
+    p = re.compile(pattern)
+    iter = p.finditer(origScript)
+    results = []
+    script = ""
+    j0 = 0; j=0
+    for match in iter:
+        i,j = match.span()
+        results.append(origScript[i:j])
+        script += origScript[j0:i] + empty
+        j0 = j
+    script += origScript[j:]
+    return script, results
+
+def restorePattern(origScript, pattern, results):
+    p = re.compile(pattern)
+    iter = p.finditer(origScript)
+    script = ""
+    j0 = 0; q = 0
+    for match in iter:
+        i,j = match.span()
+        script += origScript[j0:i] + results[q]
+        j0 = j; q += 1
+    script += origScript[j:]
+    return script
+
+def appendPattern(origScript, pattern, post):
+    p = re.compile(pattern)
+    iter = p.finditer(origScript)
+    script = ""
+    j0 = 0;
+    for match in iter:
+        i,j = match.span()
+        script += origScript[j0:j] + post
+        j0 = j;
+    script += origScript[j0:]
+    return script
+
+
+
+
+# Read in kython script #
+with open(inName) as file:
+    script = file.read()+'\n' # extra newlines just to be safe
+origScript = script
+
+# disp(script, "ORIGINAL\n")
+
+#    "_"   matches things between "
+#    (_)*  matches 0+ occurances
+#   (?:_)  hides matches in _ from later expressions (prevents \" from ending quote)
+#     \"   matches single \"
+#     |    or
+#   [^"]   set of all chars except "
+quotePattern = r'"(?:\\"|[^"])*"'
+
+# (?s)  lets the . match newlines (block comments can go across lines)
+#  _*?  matches _ as few times as possible (stops pattern at first */ encountered)
+blockcmtPattern = r'(?s)\/\*.*?\*\/'
+
+#  \n   includes the newline character in the pattern for bookeeping
+linecmtPattern = r'\/\/.*\n'
+
+# Remove block comments
+script, blockcmts = removePattern(script, blockcmtPattern, '')
+# disp(script, "BLOCK COMMENTS REMOVED\n")
+
+# Remove line comments and bottom blank lines
+script, linecmts = removePattern(script, linecmtPattern, '\n')
+script = script.rstrip() + '\n'
+# disp(script, "LINE COMMENTS REMOVED\n")
+
+# Remove all quotes
+script, quotes = removePattern(script, quotePattern, '\"\"')
+# disp(script, "STRING LITERALS REMOVED\n")
+
+# Replace tab charaters
+script = script.replace('\t', ' ')
+
+script = replacePattern(script, r' *\n *', '\n') # trim whitespace from lines
+
+# Process kyo's         # non-newline whitespace ([^\S\n]) vs ( )? <--tab char issue
+##### MAKE THESE SMARTER TO CLEAN UP PYTHON
+script = script.replace('<<<', '<<\' \'<<')   # space adding concatenator
+script = appendPattern(script, r'(?<=[\n;]) *kyo[\s<][^;\n]*[^\n;]', '),end=\'\')') # kyo end
+script = replacePattern(script, r'(?<=[\n;])(?!=[ <]) *kyo', 'print((\'\'') # kyo start
+script = replacePattern(script, r'\s*<:\s*', ') + str(\'\\n\') + str(') # eol
+script = re.sub(r'\s*<<\s*', ') + str(', script) # <<
+
+# Process kyi's
+script = re.sub(r'(?<=[\n;]) *kyi *>>', ">>", script)
+script = appendPattern(script, r'(?i)>> *[^ \n]*', " = input(); ")
+script = script.replace('>>', '')
+# disp(script, "KY-I/O'S INTERPRETED\n")
+
+# Fix statements
+script = re.sub(r'else *if[^a-zA-Z_]', "elif", script)
+script = script.replace("++", "+=1")
+script = script.replace("true", "True")
+script = script.replace("false", "False")
+
+# Fix for loops
+p = re.compile(r'(?<=[^a-zA-Z0-9_])for\s*\(')
+iter = p.finditer(script)
+for match in iter:
+    f0, p1 = match.span();
+    p1 -= 1
+    s1 = script.find(';', p1)
+    s2 = script.find(';', s1+1)
+    p = re.compile(r'\)\s*{')
+    p2, br1 = p.search(script, s1).span()
+    nBr = 1; br2 = br1
+    while nBr > 0:
+        if   script[br2]=='{': nBr+=1
+        elif script[br2]=='}': nBr-=1
+        br2+=1
+    loopText = script[p1+1:s1+1] + "\nwhile(" + script[s1+1:s2].strip() + "){" \
+             + script[br1:br2-1] + "//FOR" + script[s2+1:p2].strip() + "\n}"
+    script = insert(script, loopText, f0, br2)
+
+# Implement do loops
+p = re.compile(r'(?<=[^a-zA-Z0-9_])do\s*{')
+iter = p.finditer(script)
+for match in iter:
+    d0, br1 = match.span()
+    nBr = 1; br2 = br1
+    while nBr > 0:
+        if   script[br2]=='{': nBr+=1
+        elif script[br2]=='}': nBr-=1
+        br2+=1
+    p1 = script.find('(', br2)+1
+    nP = 1; p2 = p1
+    while nP > 0:
+        if   script[p2]=='(': nP+=1
+        elif script[p2]==')': nP-=1
+        p2+=1
+    looptext = "kython_internal_boolean = True\n"  \
+        + "while(kython_internal_boolean){" + script[br1:br2-1] \
+        + "//DOkython_internal_boolean = " + script[p1-1:p2] + '\n}'
+    script = insert(script, looptext, d0, p2)
+# disp(script, "LOOPS TRANSLATED\n")
+
+# Insert pass into empty functions
+p = re.compile(r'{\s*}')
+iter = p.finditer(script)
+newScript = ""
+i0 = 0
+for match in iter:
+    i,j = match.span()
+    newScript += script[i0:i+1] + '\npass'
+    i0 = i+1
+script = newScript + script[i0:]
+
+# Apply proper indent
+script = script.replace('\n{', '{\n') # move brace into rational position (who's this for?)
+lvl = 0; i0 = 0; i = 1; tab = 2
+while i < len(script)-1:
+    if script[i]=='\n':  # end of a line, need to indent it
+        if script[i0+1] == "}": lvl-=1 # if line closes a brace, decrease indent
+        script = insert(script, lvl*tab*" ", i0+1, i0+1)  # add indent
+        i += lvl*tab   # correct script index position (it got bigger, moving underfoot)
+        if script[i-1] == "{": lvl+=1  # if line opens a brace, increase indent
+        i0 = i
+    i+=1
+disp(script, "PYTHON INDENTATION APPLIED\n")
+
+script = re.sub(r'\s*pass', ' pass', script)
+script = re.sub(r'}\n\s*//FOR', '', script)  # need to remove newline after while  ##############################################
+script = re.sub(r'\s*//FOR', '; ', script)   #   probably need to use match.span(), etc
+script = re.sub(r'}\n\s*//DO', '', script)   #
+script = re.sub(r'\n\s*//DO', '; ', script)  #
+disp(script, "DOs n FORs\n")
+
+# Restore Remaining Python Symbols
+script = script.replace("{", ":")
+script = script.replace("}", "")
+script = re.sub(r'\s*&&\s*', ' and ', script)
+script = re.sub(r'\s*\|\|\s*', ' or ', script)
+script = re.sub(r'(?<!#)!(?!=)', 'not ', script)
+dicPattern = r"\((\s\"*.+\"\s*:\s*.+\s*,)+\s\"*.+\"\s*:\s*.+\s*\)"
+iter = re.finditer(dicPattern, script)
+i0 = 0
+for match in iter:
+    i,j = match.span()
+    script = insert(script,'{',i,i+1)
+    script = insert(script,'}',j-1,j)
+disp(script, "SYMBOLS TRANSLATED\n")
+
+# Restore quotes
+script = restorePattern(script, quotePattern, quotes)
+# disp(script, "STRING LITERALS RESTORED\n")
+
+# Add headers
+i = 0; j = 0
+top = re.match(r'#!.*\n| *\n', script)
+if top:
+    print("SHEBANG!")
+    i,j = top.span()
+script = insert(script, "from sys import argv as kython_internal_argv; \n", i, j)
+
+# Ad footers
+script += " ########## KYTHON GENERATED FUNCTIONS ##########\n"
+script += "\nif __name__==\"__main__\":\n"
+script += tab*" "+"try: main()\n" + tab*" "+"except NameError: pass\n"
+script += tab*" "+"except TypeError:"
+argOptions = ("len(kython_internal_argv), kython_internal_argv", "kython_internal_argv")
+for a in range(len(argOptions)):
+    lvl = a+2
+    script += "\n"+tab*lvl*" " + "try: main(" + argOptions[a] + ")"
+    script += "\n"+tab*lvl*" " + "except TypeError:"
+script += "pass"
+# disp(script, "HEADERS AND FOOTERS ADDED\n")
+
+
+with open(outName, "w") as file:
+    file.write(script)
+
+
+
+
+# The line below will screw up rows for python error reports.  not sure how to handle that...
+# intercept and rewrite python errors?  WAIT, maybe i dont have to replace ;
+# script, nil = removePattern(script, r';\s*', '\n')  # do last-ish, except for loops headers?
+
+
+
+# Track when I consume/expand lines while interpretting?
+#    Each python line might represent more than one kython line, or
+#    multiple py lines might be repped by multiple ky lines. I may be
+#    able to prevent a set of ky lines growing in py by squeezing
+#    multiple lines into one with ;
+#    This is an issue because the python interpreter will give line
+#    numbers of errors from the generated python file.
+
+
+#   ________kython________                  __________python__________
+#   |                                       |
+#  1| kyo <<                     ---->     1| print(str("la la ")+str('\n'),end=" ")
+#  2|     "la la " <<                      2|
+#  3|      eol                             3| # added newlines here to match ky
+#  4|                                      4|
+#  5| x = 0                                5| x = 0
+#  6| do {                       ---->     6| go = true
+#  7|     x++                              7| while go:
+#  8| } while(x<10)                        8|   x+=1; go = x<10
+
+
+
+
+
+
+
+
+
+
+# STRING ELEMENT MODIFICATION
+# try:
+#    text[3] = 'r'
+# except TypeError:
+#    print("woops")
+
+
+
+# ONE-LINE STATEMENTS?
+#
+#
+# REMOVE AND REPLACE PREPROC # (to prevnet kython from messing them up)
+
+
+
+# Kyle, consider re.sub - you can give it a funtion to edit values

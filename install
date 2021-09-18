@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "Copying kython to /bin"
+cp kython* /bin
+echo "Cloning vim syntax"
+
+echo "Installing vim syntax"
+
+echo "Cloning atom language"
+
+echo "Installing atom language"
+
