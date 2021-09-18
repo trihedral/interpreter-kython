@@ -1,0 +1,19 @@
+#!/bin/bash
+
+echo "* Removing kython from /bin"
+sudo -v
+sudo rm /bin/kython
+sudo rm /bin/kythonInterpreter
+echo "* Done"
+
+echo -e "\n* Uninstalling vim syntax"
+rm ~/.vim/LICENSE_KYTHON 
+rm ~/.vim/syntax/vim-syntax-kython.vim 
+rm ~/.vim/ftdetect/vim-syntax-kython.vim
+echo "* Done"
+
+echo -e "\n* Uninstalling atom language"
+rm -rf ~/.atom/packages/language-kython
+echo "* Done"
+
+echo -e "\n\t\t~ Kython Uninstall Complete ~\n" 

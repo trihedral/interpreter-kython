@@ -1,24 +1,32 @@
 #!/bin/bash
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-echo "Copying kython to /bin"
-cp interpreter-kython/kython /bin
-cp interpreter-kython/kythonInterpreter /bin
+echo "* Copying kython to /bin"
+sudo -v
+sudo cp $SCRIPTPATH/kython /bin
+sudo cp $SCRIPTPATH/kythonInterpreter /bin
+echo "* Done"
 
-echo "Cloning vim syntax"
+echo -e "\n* Cloning vim syntax"
 git clone https://github.com/trihedral/vim-syntax-kython
+echo "* Done"
 
-echo "Installing vim syntax"
+echo -e "\n* Installing vim syntax"
 mkdir -p ~/.vim
 cp -r vim-syntax-kython/* ~/.vim/
 mv ~/.vim/LICENSE ~/.vim/LICENSE_KYTHON
 rm -rf vim-syntax-kython
+echo "* Done"
 
-echo "Cloning atom language"
+echo -e "\n* Cloning atom language"
 git clone https://github.com/trihedral/language-kython
+echo "* Done"
 
-echo "Installing atom language"
+echo -e "\n* Installing atom language"
 mkdir -p ~/.atom/packages/
 cp -r language-kython ~/.atom/packages/
 rm -rf language-kython
+echo "* Done"
 
-echo "Kython install complete. You may now delete the interpreter-kython directory"
+echo -e "\n\t           ~ Kython Install Complete ~" 
+echo -e   "\tYou may now delete the interpreter-kython directory.\n"

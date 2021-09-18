@@ -254,7 +254,6 @@ script = restorePattern(script, quotePattern, quotes)
 i = 0; j = 0
 top = re.match(r'#!.*\n| *\n', script)
 if top:
-    print("SHEBANG!")
     i,j = top.span()
 script = insert(script, "from sys import argv as kython_internal_argv; \n", i, j)
 
