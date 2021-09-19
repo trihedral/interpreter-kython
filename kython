@@ -15,30 +15,27 @@
 
 argL=($@) # makes arg string into list
 in=$1
-#if [[ ${in:0:2} == ./ ]]; then 
-#   in=${in:2} 
-#fi
 out=$(dirname $in)/.$(basename $in).py
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 n=$(expr $# - 1) # last arg index
-if [[ $n -ge 0 ]]; then           ## 
-  argF="${argL[$n]}"               # 
+if [[ $n -ge 0 ]]; then           ##
+  argF="${argL[$n]}"               #
   if [[ $argF == -2py ]]; then     # remove -2py from args
-    argL=( ${argL[@]:0:n} )        # 
+    argL=( ${argL[@]:0:n} )        #
 fi; fi                            ##
 
 argL=(${argL[@]:1}) # remove script name from argL
 args=${argL[@]}
 
-kythonInterpreter $in $out      # run kython interpreter on input
+$SCRIPTPATH/kythonInterpreter $in $out    # run kython interpreter on input
 if [[ $? == 0 ]]; then          # if no error from kython
-   python3 $out $args           # run output with python3   
-   if [[ $argF == -2py ]]; then    ##    
+   python3 $out $args           # run output with python3
+   if [[ $argF == -2py ]]; then    ##
       mv $out $in.py                # if last arg is -2py,
    else                             # save python script
       rm $out                       #
-   fi                              ## 
-else 
+   fi                              ##
+else
    echo "Kython syntax errors.  Exiting"
 fi
-
