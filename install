@@ -35,9 +35,7 @@ fi
 echo -e "\n* Installing Kython interpreter to "$bin
 echo "Creating $bin/kython"
 $cmd $SCRIPTPATH/kython $bin
-echo "Creating $bin/kythonInterpreter"
-$cmd $SCRIPTPATH/kythonInterpreter $bin
-echo "Creating $bin/kythonInterpreter"
+echo "Creating $bin/kython_internal_modules"
 $cmd $SCRIPTPATH/kython_internal_modules $bin
 
 

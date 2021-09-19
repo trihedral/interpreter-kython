@@ -15,7 +15,7 @@
 
 argL=($@) # makes arg string into list
 in=$1
-out=$(dirname $in)/.$(basename $in).py
+out=$(dirname $in)/.$(basename $in).py # output hidden by default
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 n=$(expr $# - 1) # last arg index
@@ -28,7 +28,8 @@ fi; fi                            ##
 argL=(${argL[@]:1}) # remove script name from argL
 args=${argL[@]}
 
-$SCRIPTPATH/kythonInterpreter $in $out    # run kython interpreter on input
+ # run kython interpreter on input
+$SCRIPTPATH/kython_internal_modules/kythonInterpreter $in $out
 if [[ $? == 0 ]]; then          # if no error from kython
    python3 $out $args           # run output with python3
    if [[ $argF == -2py ]]; then    ##
