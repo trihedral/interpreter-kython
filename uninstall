@@ -1,19 +1,30 @@
 #!/bin/bash
 
-echo -e "\n* Removing kython from /bin"
-sudo -v
-sudo rm /bin/kython
-sudo rm /bin/kythonInterpreter
+# OPTION TO REMOVE FROM PATHS?
+
+if [[ $1 != "" ]]; then # Directory given as arg
+  bin=$1
+  cmd='rm -r'
+else # Directory not given, assume /bin
+  bin='/bin'
+  cmd='sudo rm -r'
+  sudo -v
+fi
+
+echo -e "\n* Removing kython from $bin"
+$cmd $bin/kython
+$cmd $bin/kythonInterpreter
+$cmd $bin/kython_internal_modules
 echo "* Done"
 
 echo -e "\n* Uninstalling vim syntax"
-rm ~/.vim/LICENSE_KYTHON 
-rm ~/.vim/syntax/vim-syntax-kython.vim 
+rm ~/.vim/LICENSE_KYTHON
+rm ~/.vim/syntax/vim-syntax-kython.vim
 rm ~/.vim/ftdetect/vim-syntax-kython.vim
 echo "* Done"
 
 echo -e "\n* Uninstalling atom language"
-rm -rf ~/.atom/packages/language-kython
+rm -r ~/.atom/packages/language-kython
 echo "* Done"
 
-echo -e "\n\t\t~ Kython Uninstall Complete ~\n" 
+echo -e "\n\t\t~ Kython Uninstall Complete ~\n"

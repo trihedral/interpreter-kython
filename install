@@ -1,32 +1,100 @@
 #!/bin/bash
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-echo -e "\n* Copying kython to /bin"
-sudo -v
-sudo cp $SCRIPTPATH/kython /bin
-sudo cp $SCRIPTPATH/kythonInterpreter /bin
+
+# Determine profile used
+if [[ -f ~/.bashrc ]]; then
+  profile=".bashrc"
+elif [[ -f ~/.bash_profile ]]; then
+  profile=".bash_profile"
+elif [[ -f ~/.profile ]]; then
+  profile=".profile"
+fi
+
+
+# Determine directory
+if [[ $1 != "" ]]; then   # directory given as arg
+  bin=$1
+  cmd='cp -r'
+  mkdir -p $bin
+else            # directory not given, assume /bin
+  bin='/bin'
+  cmd='sudo cp -r'
+  sudo -v
+  if [[ $? != 0 ]]; then     # check if authorized
+    echo -e "\n\t                Error Authenticating"
+    echo -e   "\tIf you're root, re-run with a valid install location"
+    echo -e   "\targument. For example:"
+    echo -e   "$0 ~/bin"
+    exit 1
+  fi
+fi
+
+
+# Copy over interpreter files
+echo -e "\n* Installing Kython interpreter to "$bin
+echo "Creating $bin/kython"
+$cmd $SCRIPTPATH/kython $bin
+echo "Creating $bin/kythonInterpreter"
+$cmd $SCRIPTPATH/kythonInterpreter $bin
+echo "Creating $bin/kythonInterpreter"
+$cmd $SCRIPTPATH/kython_internal_modules $bin
+
+
+# Add to path in profile if needed
+if [[ $profile != "" ]]; then
+  if [[ ":$PATH:" != *":$bin:"* ]]; then
+    echo "Appending PATH export to ~/$profile"
+    echo "export PATH=\"\$PATH\":$bin" >> ~/$profile
+    mustSource=true
+  else
+    echo "PATH already contains $bin"
+  fi
+  if [[ ":$PYTHONPATH:" != *":$bin/kython_internal_modules:"* ]]; then
+    echo "Appending PYTHONPATH export to ~/$profile"
+    echo "export PYTHONPATH=\"\$PYTHONPATH\":$bin/kython_internal_modules" >> ~/$profile
+    mustSource=true
+  else
+    echo "PYTHONPATH already contains $bin/kython_internal_modules"
+  fi
+else
+  echo "Profile file not found - failed to add to PATH variables"
+fi
 echo "* Done"
 
-echo -e "\n* Cloning vim syntax"
-git clone https://github.com/trihedral/vim-syntax-kython
-echo "* Done"
 
+
+# install syntax hightlighting from github
+echo -e "\n* Downloading vim syntax"
+git clone https://github.com/trihedral/vim-syntax-kython # vim
+echo "* Done"
 echo -e "\n* Installing vim syntax"
 mkdir -p ~/.vim
+echo "Copying files to ~/.vim"
 cp -r vim-syntax-kython/* ~/.vim/
 mv ~/.vim/LICENSE ~/.vim/LICENSE_KYTHON
+echo "Removing repository"
 rm -rf vim-syntax-kython
 echo "* Done"
-
-echo -e "\n* Cloning atom language"
-git clone https://github.com/trihedral/language-kython
+echo -e "\n* Downloading atom language"
+git clone https://github.com/trihedral/language-kython  # atom
+rm -rf language-kython/.* 2>$SCRIPTPATH/null
 echo "* Done"
-
 echo -e "\n* Installing atom language"
 mkdir -p ~/.atom/packages/
+echo "Copying files to ~/.atom"
 cp -r language-kython ~/.atom/packages/
+echo "Removing repository"
 rm -rf language-kython
 echo "* Done"
 
-echo -e "\n\t           ~ Kython Install Complete ~" 
-echo -e   "\tYou may now delete the interpreter-kython directory.\n"
+
+rm $SCRIPTPATH/null
+echo -e "\n\t            ~ Kython Install Complete ~"
+echo -e   "\tYou may now delete the interpreter-kython directory"
+echo -e   "\t(or check out the example programs in there)."
+if [[ $mustSource == true ]]; then
+echo -e   "\tFor all changes to take effect, log out and back in"
+echo -e   "\tor run the command: source ~/$profile"
+fi
+echo ""
