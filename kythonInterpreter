@@ -146,6 +146,7 @@ script = appendPattern(script, r'(?<=[\n;]) *kyo[\s<][^;\n]*[^\n;]', '),end=\'\'
 script = replacePattern(script, r'(?<=[\n;])(?!=[ <]) *kyo', 'print((\'\'') # kyo start
 script = replacePattern(script, r'\s*<:\s*', ') + str(\'\\n\') + str(') # eol
 script = re.sub(r'\s*<<\s*', ') + str(', script) # <<
+# remove "str('')+", then "+str('')", then str('')
 
 # Process kyi's
 script = re.sub(r'(?<=[\n;]) *kyi *>>', ">>", script)
@@ -257,8 +258,9 @@ if top:
     i,j = top.span()
 script = insert(script, "from sys import argv as kython_internal_argv; \n", i, j)
 
-# Ad footers
-script += " ########## KYTHON GENERATED FUNCTIONS ##########\n"
+# Add footers
+script += "########## KYTHON GENERATED FUNCTIONS ##########\n"
+
 script += "\nif __name__==\"__main__\":\n"
 script += tab*" "+"try: main()\n" + tab*" "+"except NameError: pass\n"
 script += tab*" "+"except TypeError:"
@@ -269,6 +271,7 @@ for a in range(len(argOptions)):
     script += "\n"+tab*lvl*" " + "except TypeError:"
 script += "pass"
 # disp(script, "HEADERS AND FOOTERS ADDED\n")
+
 
 
 with open(outName, "w") as file:
