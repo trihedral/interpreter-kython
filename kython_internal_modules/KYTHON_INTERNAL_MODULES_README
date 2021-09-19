@@ -1,7 +1,7 @@
 The kython_internal_modules directory is copied to the bin
 of choice by the installer.  Although the bin may be in
 PATH, that is not  necessary.  What makes the modules
-accessible is that   kython_internal_modules is added to
+accessible is that kython_internal_modules is added to
 PYTHONPATH, allowing its contents to be imported into python
 scripts.  
 
