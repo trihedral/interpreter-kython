@@ -1,4 +1,6 @@
 # https://misc.flogisoft.com/bash/tip_colors_and_formatting
+# https://superuser.com/questions/823883/how-to-justify-and-center-text-in-bash
+# https://www.kite.com/python/answers/how-to-check-the-syntax-of-a-python-script-without-executing-it#:~:text=Use%20the%20shell%20command%20python,the%20script%20without%20executing%20it.&text=If%20there%20was%20an%20error,the%20file%20will%20not%20run.
 
 blk  = '\033[30m'
 red  = '\033[31m'

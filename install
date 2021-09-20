@@ -43,14 +43,14 @@ $cmd $SCRIPTPATH/kython_internal_modules $bin
 if [[ $profile != "" ]]; then
   if [[ ":$PATH:" != *":$bin:"* ]]; then
     echo "Appending PATH export to ~/$profile"
-    echo "export PATH=\"\$PATH\":$bin" >> ~/$profile
+    echo "export PATH=\"\$PATH\":$bin #ADDED_BY_KYTHON" >> ~/$profile
     mustSource=true
   else
     echo "PATH already contains $bin"
   fi
   if [[ ":$PYTHONPATH:" != *":$bin/kython_internal_modules:"* ]]; then
     echo "Appending PYTHONPATH export to ~/$profile"
-    echo "export PYTHONPATH=\"\$PYTHONPATH\":$bin/kython_internal_modules" >> ~/$profile
+    echo "export PYTHONPATH=\"\$PYTHONPATH\":$bin/kython_internal_modules #ADDED_BY_KYTHON" >> ~/$profile
     mustSource=true
   else
     echo "PYTHONPATH already contains $bin/kython_internal_modules"

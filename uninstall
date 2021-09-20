@@ -1,7 +1,13 @@
 #!/bin/bash
 
-# Have installer place #KYTHON after PATH lines added to profile
-# Have uninstaller scan for those and remove.  BAM!
+# Determine profile used
+if [[ -f ~/.bashrc ]]; then
+  profile=".bashrc"
+elif [[ -f ~/.bash_profile ]]; then
+  profile=".bash_profile"
+elif [[ -f ~/.profile ]]; then
+  profile=".profile"
+fi
 
 if [[ $1 != "" ]]; then # Directory given as arg
   bin=$1
@@ -26,5 +32,11 @@ echo "* Done"
 echo -e "\n* Uninstalling atom language"
 rm -r ~/.atom/packages/language-kython
 echo "* Done"
+
+if [[ $(grep ADDED_BY_KYTHON ~/$profile) != "" ]]; then
+  echo "* Removing path export lines from ~/$profile"
+  sed -i '/^.*ADDED_BY_KYTHON\s*$/d' ~/$profile
+  echo "* Done"
+fi
 
 echo -e "\n\t\t~ Kython Uninstall Complete ~\n"
